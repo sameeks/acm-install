@@ -1,0 +1,10 @@
+com/acadaman/install/config/FeesYamlProperties.class
+com/acadaman/install/config/FeesYamlProperties$Datasource.class
+com/acadaman/install/config/FeesYamlProperties$Properties.class
+com/acadaman/install/App.class
+com/acadaman/install/config/FeesYamlProperties$Application.class
+com/acadaman/install/service/FeesService.class
+com/acadaman/install/config/FeesYamlProperties$Config.class
+com/acadaman/install/config/FeesServiceProperties.class
+com/acadaman/install/IInstall.class
+com/acadaman/install/OpenShiftServiceInstall.class
