@@ -1,17 +1,13 @@
-package com.acadaman.install.service;
+package com.acadaman.install;
 
-import com.acadaman.install.IInstall;
+import org.springframework.stereotype.Service;
 
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import com.acadaman.install.config.FeesYamlProperties;
-import com.acadaman.install.config.FeesServiceProperties;
+import com.acadaman.install.InstallServiceBean;
 import com.acadaman.install.OpenShiftServiceInstall;
-
-import org.springframework.stereotype.Component;
-import org.springframework.core.io.ClassPathResource;
+import com.acadaman.install.config.AppYamlProperties;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.FileUtils;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -26,40 +22,32 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.RefSpec;
 
-import org.apache.commons.io.FileUtils;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.DumperOptions;
 
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
-@Component
-public class FeesService implements IInstall {
+@Service
+public class ServiceHelper {
 
-    private static final Logger log = LogManager.getLogger(FeesService.class);
+    private static final Logger log = LogManager.getLogger(ServiceHelper.class);
+    //private InstallServiceBean serviceBean;
 
-    // @todo Add FeesService properties here.
-    private String name;
-    private String description;
-    private static final String FEES_PLATFORM = "java";
-    private static final String FEES_GIT_REMOTE_URL = "https://github.com/charyorde/fees.git";
-    private static final List<String> FEES_CATRIDGE = Arrays.asList("jbossews-2.0");
-    private static final boolean FEES_SCALE = false;
-    
-    // autowire FeesYamlProperties
-    //
-    public void execute(Map<String, String> params) {
+    public String generateAppConfigAndCommit(InstallServiceBean serviceBean) {
         // clone the git repo into $OPENSHIFT_DATA_DIR
         Repository repository = null;
 
         try {
-            File localPath = File.createTempFile("FeesGitRepository", "");
+            File localPath = File.createTempFile(serviceBean.getWorkingDirName(), "");
             localPath.delete();
 
             log.info("Cloning from FEES_GIT_REMOTE_URL to " + localPath);
             Git.cloneRepository()
-                .setURI("https://github.com/charyorde/fees.git")
+                .setURI(serviceBean.getRepositoryUrl())
                 .setDirectory(localPath)
                 .call();
 
@@ -113,7 +101,7 @@ public class FeesService implements IInstall {
         // is copied into git server (e.g github)
         try {
             final StoredConfig config = repository.getConfig();
-            RemoteConfig remoteConfig = new RemoteConfig(config, "fees-git-repo");
+            RemoteConfig remoteConfig = new RemoteConfig(config, serviceBean.getRemoteConfigName());
             URIish uri= new URIish(repository.getDirectory().toURI().toURL());
             remoteConfig.addURI(uri);
             remoteConfig.update(config);
@@ -135,26 +123,28 @@ public class FeesService implements IInstall {
 //        feesService.setRepoUrl("https:github.com/charyorde/fees");
 //        feesService.setOpenShiftCatridge(Arrays.asList(new String[]{"diy", "mysql"}));
            
-        FeesYamlProperties spring = new FeesYamlProperties();
-        List<FeesYamlProperties.Properties> properties = new ArrayList<FeesYamlProperties.Properties>();
-        FeesYamlProperties.Properties property = spring.new Properties();
-        property.setProfile("internal");
-        property.setSchoolName(params.getOrDefault("schoolName", ""));
-        property.setName(property.getSchoolName() + "fees");
-        property.setDriverClassName("com.mysql.jdbc.Driver");
-        property.setUrl("jdbc:mysql://10.0.0.4/eduerp");
-        property.setUsername(params.getOrDefault("root", "root"));
-        property.setPassword(params.getOrDefault("root", "root"));
-        property.setDbPort(0); // @todo Get from posted value and convert to int.
-        property.setDbHost(params.getOrDefault("root", ""));
-        property.setFqdn(params.getOrDefault("fqdn", ""));
-        property.setInitialized(false);
-        property.setPlatformVersion("");
-        property.setAwsBucketName("");
-        property.setFilesystemPath("");
+//        AppYamlProperties spring = new AppYamlProperties();
+//        List<AppYamlProperties.Properties> properties = new ArrayList<AppYamlProperties.Properties>();
+//        AppYamlProperties.Properties property = spring.new Properties();
+//        property.setProfile("internal");
+//        property.setSchoolName(serviceBean.getAcadamanSchool().getSchoolName());
+//        property.setName(property.getSchoolName() + "fees");
+//        property.setDriverClassName("com.mysql.jdbc.Driver");
+//        property.setUrl("jdbc:mysql://10.0.0.4/eduerp");
+//        property.setUsername(params.getOrDefault("root", "root"));
+//        property.setPassword(params.getOrDefault("root", "root"));
+//        property.setDbPort(0); // @todo Get from posted value and convert to int.
+//        property.setDbHost(params.getOrDefault("root", ""));
+//        property.setFqdn(params.getOrDefault("fqdn", ""));
+//        property.setInitialized(false);
+//        property.setPlatformVersion("");
+//        property.setAwsBucketName("");
+//        property.setFilesystemPath("");
+//
+//        properties.add(property);
+//        spring.setSpring(null);
 
-        properties.add(property);
-        spring.setSpring(null);
+        AppYamlProperties spring = serviceBean.getAppYaml();
 
         // dumpYaml
         Yaml yaml = new Yaml(options);
@@ -197,36 +187,31 @@ public class FeesService implements IInstall {
         
         // close the repo
         repository.close();
-
-        // createOpenShiftApplication
+    
+        // generateAwsBucket
+        // return deployToOpenShift();
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("name", property.getName());
-        map.put("initial_git_url", FEES_GIT_REMOTE_URL);
-        map.put("catridge", StringUtils.join(FEES_CATRIDGE));
+        map.put("name", serviceBean.getServiceName());
+        map.put("initial_git_url", serviceBean.getRepositoryUrl());
+        map.put("catridge", StringUtils.join(serviceBean.getOpenShiftCatridge()));
         OpenShiftServiceInstall serviceInstall = new OpenShiftServiceInstall("email", "password", new File("/path/to/fees-service.json"), map);
         try {
-            serviceInstall.createAppUsingHttp();
+            return serviceInstall.createAppUsingHttpWithJsonResponse();
         }
         catch(Exception e) {
         
         }
+        return null;
     }
 
-    public String getName() {
-        return name;
+    private void commitApplicationYaml(File yamlFile) {
+    
     }
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String testReflectMethod() {
-        return "invoked using reflection";
+    
+    /**
+     * Deploy app to OpenShift
+     */ 
+    private String deployToOpenShift() {
+        return "{status: deployed}";
     }
 }

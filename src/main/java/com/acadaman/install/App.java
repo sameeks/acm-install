@@ -43,11 +43,15 @@ public class App
 {
     private static final Logger log = LogManager.getLogger(App.class);
 
-    //@Autowired
-    //private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     
     @Autowired
     private Environment env;
+
+    private static final String IP_ADDRESS = System.getenv("OPENSHIFT_DIY_IP") != null ? System.getenv("OPENSHIFT_DIY_IP") : "localhost";
+    private static final int PORT = System.getenv("OPENSHIFT_DIY_PORT") != null ? Integer.parseInt(System.getenv("OPENSHIFT_DIY_PORT")) : 8505;
+    //private static final String DATASOURCE_URL = System.getenv("OPENSHIFT_MYSQL_DB_HOST") != null ? env.getProperty("spring.datasource.url") : "";
 
 //    @Bean
 //    public PropertySource<?> yamlPropertySourceLoader() throws IOException {
@@ -57,14 +61,24 @@ public class App
 //        return applicationYamlPropertySource;
 //    }
 
+    @Bean
+    public DataSource dataSource() {
+        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setDriverClassName(env.getProperty("spring.datasource.driver"));
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.datasource.password"));
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+
     // add here springmvc if spark wouldn't work.
 
     public static void main( String[] args )
     {
         System.out.println( "Hello World!" );
         SpringApplication.run(App.class, args);
-        setIpAddress("localhost");
-        setPort(8505);
+        setIpAddress(IP_ADDRESS);
+        setPort(PORT);
         // An executed filter to valid oauth
         before((request, response) -> {
             response.body("Filtering oauth");

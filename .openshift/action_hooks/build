@@ -1,0 +1,6 @@
+#!/bin/bash
+echo 'Executing build script';
+# test if application.yml exist
+
+# foreach of the properties, if any is unset, set it
+# rhc env set ACM_REMOTE_MYSQL_DB_HOST=acadaman.com ACM_REMOTE_MYSQL_DB_PORT= ACM_REMOTE_MYSQL_DB_USERNAME= ACM_REMOTE_MYSQL_DB_PASSWORD= ACM_REMOTE_MYSQL_DB_NAME= --app install
