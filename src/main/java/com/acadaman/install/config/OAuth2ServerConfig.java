@@ -1,4 +1,4 @@
-package com.acadaman.web;
+package com.acadaman.install.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -64,12 +64,12 @@ public class OAuth2ServerConfig {
         private AuthenticationManager authenticationManager;
 
         @Autowired
-        private DataSource datasource;
+        private DataSource dataSource;
 
         @Override
         public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
  
-            clients.jdbc(datasource).withClient("harvard-school")
+            clients.jdbc(dataSource).withClient("system")
                     .resourceIds(ACADAMAN_RESOURCE_ID)
                     .authorizedGrantTypes("authorization_code", "implicit")
                     .authorities("ROLE_CLIENT")
@@ -91,7 +91,12 @@ public class OAuth2ServerConfig {
 
         @Bean
         public TokenStore tokenStore() {
-            return new JdbcTokenStore(datasource);
+            return new JdbcTokenStore(dataSource);
+        }
+
+        @Bean
+        public DataSource dataSource() {
+            return dataSource;   
         }
 
         @Override

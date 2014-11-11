@@ -1,4 +1,4 @@
-package com.acadaman.web.config;
+package com.acadaman.install.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

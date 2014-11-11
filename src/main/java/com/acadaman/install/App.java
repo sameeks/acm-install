@@ -6,6 +6,7 @@ import static spark.Spark.*;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,6 +20,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.core.env.Environment;
 import com.acadaman.install.service.FeesService;
 
@@ -35,6 +38,7 @@ import org.apache.log4j.LogManager;
  * Fees app bootstrap
  *
  */
+@Controller
 @Configuration
 @EnableConfigurationProperties
 @EnableAutoConfiguration
@@ -61,17 +65,27 @@ public class App
 //        return applicationYamlPropertySource;
 //    }
 
-    @Bean
-    public DataSource dataSource() {
-        BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setDriverClassName(env.getProperty("spring.datasource.driver"));
-        dataSource.setUrl(env.getProperty("spring.datasource.url"));
-        dataSource.setUsername(env.getProperty("spring.datasource.username"));
-        dataSource.setPassword(env.getProperty("spring.datasource.password"));
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-    }
+//    @Bean
+//    public DataSource dataSource() {
+//        BasicDataSource dataSource = new BasicDataSource();
+//        dataSource.setDriverClassName(env.getProperty("spring.datasource.driver"));
+//        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+//        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+//        dataSource.setPassword(env.getProperty("spring.datasource.password"));
+//        this.jdbcTemplate = new JdbcTemplate(dataSource);
+//        return dataSource;
+//    }
 
     // add here springmvc if spark wouldn't work.
+    @RequestMapping("/")
+    @ResponseBody
+    public String home() {
+        String username = this.jdbcTemplate.queryForObject(
+                        "select username from client_account where id = ?",
+                                new Object[]{1L}, String.class);
+        System.out.println("Username is" + username);
+        return "Hello World!";
+    }
 
     public static void main( String[] args )
     {
