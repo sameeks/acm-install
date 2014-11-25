@@ -1,38 +1,30 @@
 package com.acadaman.install.service;
 
 import com.acadaman.install.IInstall;
-
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import com.acadaman.install.config.FeesYamlProperties;
-import com.acadaman.install.config.FeesServiceProperties;
 import com.acadaman.install.OpenShiftServiceInstall;
-
-import org.springframework.stereotype.Component;
-import org.springframework.core.io.ClassPathResource;
-
+import com.acadaman.install.config.FeesYamlProperties;
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-import org.eclipse.jgit.transport.RefSpec;
+import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
-import org.apache.commons.io.FileUtils;
-
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
-import java.io.*;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 @Component
 public class FeesService implements IInstall {
