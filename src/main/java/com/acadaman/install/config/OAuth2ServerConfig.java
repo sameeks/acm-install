@@ -102,7 +102,6 @@ public class OAuth2ServerConfig {
             return new JdbcTokenStore(dataSource());
         }
 
-
         @Bean
         public DataSource dataSource() {
             try{
